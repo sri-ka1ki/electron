@@ -93,6 +93,10 @@ declare namespace Electron {
     allowGuestViewElementDefinition(window: Window, context: any): void;
   }
 
+  interface WebFrameMain {
+    _send(internal: boolean, channel: string, args: any): boolean;
+  }
+
   interface WebPreferences {
     guestInstanceId?: number;
     openerId?: number;
