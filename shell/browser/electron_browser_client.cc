@@ -609,8 +609,7 @@ void ElectronBrowserClient::OverrideWebkitPrefs(
       SessionPreferences::GetValidPreloads(web_contents->GetBrowserContext());
   if (!preloads.empty())
     prefs->preloads = preloads;
-  if (CanUseCustomSiteInstance())
-    prefs->disable_electron_site_instance_overrides = true;
+  prefs->disable_electron_site_instance_overrides = true;
 
   SetFontDefaults(prefs);
 
@@ -619,14 +618,6 @@ void ElectronBrowserClient::OverrideWebkitPrefs(
   if (web_preferences) {
     web_preferences->OverrideWebkitPrefs(prefs);
   }
-}
-
-void ElectronBrowserClient::SetCanUseCustomSiteInstance(bool should_disable) {
-  disable_process_restart_tricks_ = should_disable;
-}
-
-bool ElectronBrowserClient::CanUseCustomSiteInstance() {
-  return disable_process_restart_tricks_;
 }
 
 content::ContentBrowserClient::SiteInstanceForNavigationType
