@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const crypto = require('crypto');
 const { GitProcess } = require('dugite');
 const childProcess = require('child_process');
 const { ESLint } = require('eslint');
@@ -99,19 +100,25 @@ const LINTERS = [{
   test: filename => filename.endsWith('.js') || filename.endsWith('.ts'),
   run: async (opts, filenames) => {
     const eslint = new ESLint({
-      cache: true,
+      // Do not use the lint cache on CI builds
+      cache: !process.env.CI,
+      cacheLocation: `node_modules/.eslintcache.${crypto.createHash('md5').update(fs.readFileSync(__filename)).digest('hex')}`,
       extensions: ['.js', '.ts'],
       fix: opts.fix
     });
     const formatter = await eslint.loadFormatter();
     let successCount = 0;
+    const results = [];
     for (const result of await eslint.lintFiles(filenames)) {
       successCount += result.errorCount === 0 ? 1 : 0;
-      if (result.errorCount !== 0 || result.warningCount !== 0) {
-        console.log(formatter.format([result]));
-      } else if (opts.verbose) {
+      results.push(result);
+      if (opts.verbose && result.errorCount === 0 && result.warningCount === 0) {
         console.log(`${result.filePath}: no errors or warnings`);
       }
+    }
+    formatter.format(results);
+    if (opts.fix) {
+      await ESLint.outputFixes(results);
     }
     if (successCount !== filenames.length) {
       console.error('Linting had errors');
